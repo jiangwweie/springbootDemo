@@ -1,6 +1,6 @@
 package com.jiangwei.test.algorithm;
 
-import com.jiangwei.dao.redis.RedisDao;
+import com.jiangwei.dao.redis.RedisUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ import java.util.*;
 public class Algorithm01 {
 
     @Autowired
-    RedisDao redisDao;
+    RedisUtil redisUtil;
 
     @Test
     public void test1() {
@@ -30,13 +30,13 @@ public class Algorithm01 {
         System.out.println("this costs " + (end - begin) + "  mills");
         System.out.println(set.size());
         Object[] objects = set.toArray();
-        redisDao.sSet("10000nums", objects);
+        redisUtil.sSet("10000nums", objects);
 
     }
 
     @Test
     public void test01() {
-        Set<Object> set = redisDao.sGet("10000nums");
+        Set<Object> set = redisUtil.sGet("10000nums");
         Iterator it = set.iterator();
         int[] array = new int[set.size()];
         int x = 0;
@@ -52,7 +52,7 @@ public class Algorithm01 {
 
     @Test
     public void test02() {
-        Set<Object> set = redisDao.sGet("10000nums");
+        Set<Object> set = redisUtil.sGet("10000nums");
         Iterator it = set.iterator();
         int[] array = new int[set.size()];
         int x = 0;

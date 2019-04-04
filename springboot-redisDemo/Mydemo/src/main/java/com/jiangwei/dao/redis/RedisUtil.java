@@ -19,7 +19,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 
 @Repository
-public class RedisDao {
+public class RedisUtil {
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;

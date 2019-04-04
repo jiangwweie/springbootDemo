@@ -6,7 +6,7 @@
 package com.jiangwei;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jiangwei.dao.redis.RedisDao;
+import com.jiangwei.dao.redis.RedisUtil;
 import com.jiangwei.util.MathUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,19 +15,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -38,7 +33,7 @@ import java.util.List;
 public class JavaApplication12 {
 
     @Resource
-    RedisDao redisDao;
+    RedisUtil redisUtil;
 
     @Test
     public  void main() {
@@ -102,7 +97,7 @@ public class JavaApplication12 {
                 long login_time = Long.parseLong(s[3]);
                 JSONObject dockingJSON = getDockingJSON(login_time, logout_time, uid, machine_code, con);
                 dockingJSON.put("machineCode", machine_code);
-                redisDao.lSet("index_"+i,dockingJSON);
+                redisUtil.lSet("index_"+i,dockingJSON);
             }
 
             i++;

@@ -63,10 +63,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -148,22 +150,22 @@
 
         <!--&lt;!&ndash;activiti集成到springboot&ndash;&gt;-->
         <!--<dependency>-->
-            <!--<groupId>org.activiti</groupId>-->
-            <!--<artifactId>activiti-spring-boot-starter-basic</artifactId>-->
-            <!--<version>6.0.0</version>-->
+        <!--<groupId>org.activiti</groupId>-->
+        <!--<artifactId>activiti-spring-boot-starter-basic</artifactId>-->
+        <!--<version>6.0.0</version>-->
         <!--</dependency>-->
 
         <!--<dependency>-->
-            <!--<groupId>org.activiti</groupId>-->
-            <!--<artifactId>activiti-spring-boot-starter-security</artifactId>-->
-            <!--<version>6.0.0</version>-->
+        <!--<groupId>org.activiti</groupId>-->
+        <!--<artifactId>activiti-spring-boot-starter-security</artifactId>-->
+        <!--<version>6.0.0</version>-->
         <!--</dependency>-->
         <!-- dubbo相关 -->
         <!-- zookeeper -->
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-            <version>3.4.6</version>
+            <version>3.4.8</version>
         </dependency>
         <dependency>
             <groupId>com.github.sgroschupf</groupId>
