@@ -1,11 +1,9 @@
 package com.jiangwei;
 
-import com.jiangwei.dao.security.UserMapper;
-import com.jiangwei.dao.redis.RedisDao;
+import com.jiangwei.dao.redis.RedisUtil;
 import com.jiangwei.entity.test.City;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -25,11 +23,11 @@ public class RedisdemoApplicationTests {
     @Resource
     private RedisTemplate<String, Object> template;
 
-    @Autowired
-    private UserMapper  userMapper;
+//    @Autowired
+//    private UserMapper  userMapper;
 
     @Resource
-    RedisDao redisDao;
+    RedisUtil redisUtil;
 
 
     /**
@@ -45,8 +43,8 @@ public class RedisdemoApplicationTests {
         map.put("chongqin", new City("chongqin", "重庆"));
         map.put("sichuan", new City("sichuan", "成都"));
         ops.multiSet(map);
-        City city = (City) ops.get("city");
-        System.out.println(city.toString());
+//        City city = (City) ops.get("city");
+//        System.out.println(city.toString());
     }
 
     /**
@@ -55,13 +53,13 @@ public class RedisdemoApplicationTests {
      */
     @Test
     public void test() {
-        boolean lSet1 = redisDao.lSet("province", "hubei");
+        boolean lSet1 = redisUtil.lSet("province", "hubei");
         System.out.println(lSet1);
-        boolean lSet2 = redisDao.lSet("province", "sichuan");
+        boolean lSet2 = redisUtil.lSet("province", "sichuan");
         System.out.println(lSet2);
-        boolean lSet3 = redisDao.lSet("province", "jiangxi");
+        boolean lSet3 = redisUtil.lSet("province", "jiangxi");
         System.out.println(lSet3);
-        List<Object> provinces = redisDao.lGet("province", 0, -1);
+        List<Object> provinces = redisUtil.lGet("province", 0, -1);
         System.out.println(provinces.toString());
     }
 
@@ -70,9 +68,9 @@ public class RedisdemoApplicationTests {
      */
     @Test
     public void test1() {
-        long listSize = redisDao.lGetListSize("province");
+        long listSize = redisUtil.lGetListSize("province");
         System.out.println(listSize);
-        long size2 = redisDao.lGetListSize("hubei");
+        long size2 = redisUtil.lGetListSize("hubei");
         System.out.println(size2);
     }
 
@@ -81,7 +79,7 @@ public class RedisdemoApplicationTests {
      */
     @Test
     public void test2() {
-        boolean hset = redisDao.hset("couple", "jiangwei", "yingying");
+        boolean hset = redisUtil.hset("couple", "jiangwei", "yingying");
         System.out.println(hset);
     }
 
@@ -94,8 +92,8 @@ public class RedisdemoApplicationTests {
 //        redisUtil.hset("provinces", "jiangxi", "nanchang");
 //        redisUtil.hset("provinces", "guangdong", "shenzhen");
 //        redisUtil.hdel("provinces","guangdong");
-        System.out.println(redisDao.hasKey("provinces"));
-        System.out.println(redisDao.hmget("provinces"));
+        System.out.println(redisUtil.hasKey("provinces"));
+        System.out.println(redisUtil.hmget("provinces"));
     }
 
     /**
@@ -103,9 +101,9 @@ public class RedisdemoApplicationTests {
      */
     @Test
     public void test4() {
-        long testSet = redisDao.sSet("testSet", new String[]{"set1", "set2", "set3", "set4", "set5", "set6", "set7", "set8"});
-        redisDao.setRemove("testSet","set2");
-        System.out.println(redisDao.sGet("testSet"));
+        long testSet = redisUtil.sSet("testSet", new String[]{"set1", "set2", "set3", "set4", "set5", "set6", "set7", "set8"});
+        redisUtil.setRemove("testSet","set2");
+        System.out.println(redisUtil.sGet("testSet"));
     }
 
     /**
@@ -113,8 +111,8 @@ public class RedisdemoApplicationTests {
      */
     @Test
     public void test5() {
-        System.out.println(redisDao.randomRemove("testSet"));
-        System.out.println(redisDao.sGet("testSet"));
+        System.out.println(redisUtil.randomRemove("testSet"));
+        System.out.println(redisUtil.sGet("testSet"));
     }
 
     @Test
@@ -126,7 +124,7 @@ public class RedisdemoApplicationTests {
         while ((line = br.readLine()) != null) {
             line = line.trim();
             list.add(line);
-            redisDao.sSet("uid111",line);
+            redisUtil.sSet("uid111",line);
         }
         br.close();
         System.out.println(list.size());
@@ -138,7 +136,7 @@ public class RedisdemoApplicationTests {
         while ((line2 = br2.readLine()) != null) {
             line2 = line2.trim();
             list2.add(line2);
-            redisDao.sSet("uid222",line2);
+            redisUtil.sSet("uid222",line2);
         }
         br2.close();
         System.out.println(list2.size());
@@ -150,9 +148,9 @@ public class RedisdemoApplicationTests {
 
     @Test
     public void test7() throws IOException {
-        Set set = redisDao.difference("uid222", "uid111");
-        Set<Object> sGet = redisDao.sGet("uid111");
-        Set<Object> sGet2 = redisDao.sGet("uid222");
+        Set set = redisUtil.difference("uid222", "uid111");
+        Set<Object> sGet = redisUtil.sGet("uid111");
+        Set<Object> sGet2 = redisUtil.sGet("uid222");
         Iterator it = set.iterator();
         List list = new ArrayList();
         while(it.hasNext()){

@@ -1,14 +1,14 @@
 package com.jiangwei.controller.security;
 
-import com.jiangwei.dao.redis.RedisDao;
+import com.jiangwei.dao.redis.RedisUtil;
 import com.jiangwei.dao.security.UserMapper;
 import com.jiangwei.entity.security.User;
+import com.jiangwei.util.CookiesUtil;
 import com.jiangwei.util.JWTTokenUtils;
 import com.jiangwei.entity.security.LoginDTO;
 import com.jiangwei.config.securityConfig.MyAuthenticationProvider;
 import com.jiangwei.config.securityConfig.WebSecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.net.URLEncoder;
 import java.util.Objects;
 
 /**
@@ -34,7 +35,7 @@ public class LoginController {
     UserMapper userMapper;
 
     @Autowired
-    RedisDao redisDao;
+    RedisUtil redisUtil;
 
     @Autowired
     private MyAuthenticationProvider myAuthenticationProvider;
@@ -43,7 +44,7 @@ public class LoginController {
     private JWTTokenUtils jwtTokenUtils;
 
     @RequestMapping(value = "/auth/login", method = RequestMethod.POST)
-    public String login(@Valid LoginDTO loginDTO, HttpServletResponse httpResponse) {
+    public String login(@Valid LoginDTO loginDTO,  HttpServletResponse httpResponse) {
         //通过用户名和密码创建一个 Authentication 认证对象，实现类为 UsernamePasswordAuthenticationToken
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
         User user  = null ;
@@ -63,8 +64,10 @@ public class LoginController {
         String token = jwtTokenUtils.createToken(authentication, false);
         //将Token写入到Http头部
         httpResponse.addHeader(WebSecurityConfig.AUTHORIZATION_HEADER, "Bearer " + token);
+        //测试 添加token到cookie中,cookie中不能有空格，逗号之类的
+        CookiesUtil.setCookie(httpResponse,WebSecurityConfig.AUTHORIZATION_HEADER, URLEncoder.encode("Bearer " + token),120000);
         try {
-            redisDao.hset(WebSecurityConfig.AUTHORIZATION_HEADER,user.getId().toString(),"Bearer " + token);
+            redisUtil.hset(WebSecurityConfig.AUTHORIZATION_HEADER,user.getId().toString(),"Bearer " + token);
         } catch (Exception e) {
             e.printStackTrace();
         }
