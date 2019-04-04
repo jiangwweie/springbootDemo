@@ -13,3 +13,4 @@ workspace.xml
 /angular-demo
 /DailyLearning
 /JavaUtils
+*.log*
