@@ -1,11 +1,12 @@
 package com.jiangwei.sg.config.shiro;
 
+import com.auth0.jwt.exceptions.InvalidClaimException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+
 import com.jiangwei.sg.entity.SysUser;
-import com.jiangwei.sg.entity.UserToRole;
-import com.jiangwei.sg.service.RoleService;
-import com.jiangwei.sg.service.UserService;
-import com.jiangwei.sg.service.UserToRoleService;
-import com.jiangwei.sg.util.jwt.JWTUtil;
+import com.jiangwei.sg.service.impl.RoleServiceImpl;
+import com.jiangwei.sg.service.impl.UserServiceImpl;
+import com.jiangwei.sg.util.Const;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
@@ -14,20 +15,29 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.stereotype.Component;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author liugh
- * @since 2018-05-03
+ * @author jiangwei
+ * @Date ：  2019/3/28 20:30
  */
+@Component
 public class MyRealm extends AuthorizingRealm {
-    private UserService userService;
-    private UserToRoleService userToRoleService;
+
+
+    private UserServiceImpl userService;
+
+//    private UserToRoleService userToRoleService;
+
 //    private MenuService menuService;
-    private RoleService roleService;
+
+    private RoleServiceImpl roleService;
+
     /**
      * 大坑！，必须重写此方法，不然Shiro会报错
      */
@@ -41,20 +51,18 @@ public class MyRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        if (userToRoleService == null) {
-            this.userToRoleService = SpringContextBeanService.getBean(UserToRoleService.class);
-        }
-//        if (menuService == null) {
-//            this.menuService = SpringContextBeanService.getBean(MenuService.class);
-//        }
+
         if (roleService == null) {
-            this.roleService = SpringContextBeanService.getBean(RoleService.class);
+            this.roleService = SpringContextBeanService.getBean(RoleServiceImpl.class);
         }
-
+        //这里查询出了user信息，进而可以查询出该用户的菜单和操作权限，
         String userNo = JWTUtil.getUserNo(principals.toString());
-        SysUser user = userService.getById(Integer.valueOf(userNo));
-        UserToRole userToRole = userToRoleService.selectByUserNo(user.getUid());
-
+        try {
+             SysUser user = userService.getById(Integer.valueOf(userNo));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //流程：redis查询菜单权限，有则添加至simpleAuthorizationInfo，没有则查询数据库，然后存入缓存
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         /*
         Role role = roleService.selectOne(new EntityWrapper<Role>().eq("role_code", userToRole.getRoleCode()));
@@ -63,16 +71,16 @@ public class MyRealm extends AuthorizingRealm {
         roleNameSet.add(role.getRoleName());
         simpleAuthorizationInfo.addRoles(roleNameSet);
         */
-        //控制菜单级别按钮  类中用@RequiresPermissions("user:list") 对应数据库中code字段来控制controller
+        simpleAuthorizationInfo.addRole("user");
         ArrayList<String> pers = new ArrayList<>();
 
         //这里根据业务逻辑添加权限，写死做一个展示
-//        List<Menu> menuList = menuService.findMenuByRoleCode(userToRole.getRoleCode());
-//        for (Menu per : menuList) {
-//             if (!ComUtil.isEmpty(per.getCode())) {
-//                  pers.add(String.valueOf(per.getCode()));
-//              }
-//        }
+        //        List<Menu> menuList = menuService.findMenuByRoleCode(userToRole.getRoleCode());
+        //        for (Menu per : menuList) {
+        //             if (!ComUtil.isEmpty(per.getCode())) {
+        //                  pers.add(String.valueOf(per.getCode()));
+        //              }
+        //        }
         pers.add("menu:read");
         pers.add("menu:del");
         pers.add("menu:update");
@@ -81,13 +89,14 @@ public class MyRealm extends AuthorizingRealm {
         return simpleAuthorizationInfo;
     }
 
+
     /**
-     * 默认使用此方法进行用户名正确与否验证，错误抛出异常即可。
+     * Subject.login会使用此方法进行用户名正确与否验证，错误抛出异常即可。
      */
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws UnauthorizedException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws InvalidClaimException, TokenExpiredException {
         if (userService == null) {
-            this.userService = SpringContextBeanService.getBean(UserService.class);
+            this.userService = SpringContextBeanService.getBean(UserServiceImpl.class);
         }
         String token = (String) auth.getCredentials();
 
@@ -96,13 +105,24 @@ public class MyRealm extends AuthorizingRealm {
         if (userNo == null) {
             throw new UnauthorizedException("token invalid");
         }
-        SysUser userBean = userService.getUserByUname(userNo);
+        SysUser userBean = null;
+        try {
+            userBean = userService.getById(Integer.valueOf(userNo));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (userBean == null) {
             throw new UnauthorizedException("User didn't existed!");
         }
-        if (! JWTUtil.verify(token, userNo, userBean.getPassword())) {
-            throw new UnauthorizedException("Username or password error");
+        //校验token
+        try {
+            JWTUtil.verify(token, userNo, Const.PRIVATE_SECRET);
+            System.out.println("mrealm success");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            System.out.println("算法编码不支持");
         }
+
         return new SimpleAuthenticationInfo(token, token, this.getName());
     }
 }

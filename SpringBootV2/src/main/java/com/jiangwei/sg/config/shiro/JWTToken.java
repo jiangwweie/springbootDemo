@@ -2,11 +2,13 @@ package com.jiangwei.sg.config.shiro;
 
 import org.apache.shiro.authc.AuthenticationToken;
 
+import java.io.Serializable;
+
 /**
- * @author liugh
- * @since 2018-05-03
+ * @author jiangwei
+ * @Date ：  2019/3/28 20:30
  */
-public class JWTToken implements AuthenticationToken {
+public class JWTToken implements AuthenticationToken , Serializable {
 
     // 密钥
     private String token;
@@ -24,4 +26,6 @@ public class JWTToken implements AuthenticationToken {
     public Object getCredentials() {
         return token;
     }
+
+
 }

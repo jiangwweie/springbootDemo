@@ -15,19 +15,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-//@Configuration
+/**
+ * @author jiangwei
+ * @Date ：  2019/3/28 20:30
+ */
+@Configuration
 public class ShiroConfig {
+
+    public ShiroConfig(){
+        System.out.println("shiro config start");
+    }
 
     @Bean
     public static LifecycleBeanPostProcessor getLifecycleBeanPostProcessor() {
         return new LifecycleBeanPostProcessor();
     }
 
+    /**
+     * 自动代理
+     */
     @Bean
-    public static DefaultAdvisorAutoProxyCreator getDefaultAdvisorAutoProxyCreator(){
-        DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator=new DefaultAdvisorAutoProxyCreator();
+    public static DefaultAdvisorAutoProxyCreator getDefaultAdvisorAutoProxyCreator() {
+        DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator = new DefaultAdvisorAutoProxyCreator();
         defaultAdvisorAutoProxyCreator.setUsePrefix(true);
-
         return defaultAdvisorAutoProxyCreator;
     }
 
@@ -62,18 +72,14 @@ public class ShiroConfig {
          * http://shiro.apache.org/web.html#urls-
          */
         Map<String, String> filterRuleMap = new HashMap<>(2);
-        // 访问401和404页面不通过我们的Filter
-        //通过http://127.0.0.1:9527/druid/index.html 访问 liugh/liugh
         filterRuleMap.put("/druid/**", "anon");
-        //放行webSocket
-        filterRuleMap.put("/websocket/*", "anon");
-        //放行swagger
-        filterRuleMap.put("/swagger-ui.html", "anon");
-        filterRuleMap.put("/swagger-resources", "anon");
-        filterRuleMap.put("/v2/api-docs", "anon");
-        filterRuleMap.put("/webjars/springfox-swagger-ui/**", "anon");
+        //放行登录页
+        filterRuleMap.put("/auth/login", "anon");
+        filterRuleMap.put("/auth/logout","anon");
         // 所有请求通过我们自己的JWT Filter
+//        filterRuleMap.put("/**", "anon");
         filterRuleMap.put("/**", "jwt");
+
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return factoryBean;
     }

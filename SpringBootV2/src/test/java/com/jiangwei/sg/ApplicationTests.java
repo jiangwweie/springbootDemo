@@ -2,7 +2,7 @@ package com.jiangwei.sg;
 
 import com.jiangwei.sg.entity.SysUser;
 import com.jiangwei.sg.mapper.SysUserMapper;
-import com.jiangwei.sg.util.redis.RedisUtil;
+import com.jiangwei.sg.util.RedisUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

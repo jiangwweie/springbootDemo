@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 /**
  *  获取spring上下文
- * @author liugh
- * @since 2018-03-21
+ * @author jiangwei
+ * @Date ：  2019/3/28 20:30
  */
 @Component
 public class SpringContextBeanService implements ApplicationContextAware {

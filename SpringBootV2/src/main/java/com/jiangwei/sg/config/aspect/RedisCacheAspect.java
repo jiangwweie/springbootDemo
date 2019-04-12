@@ -1,13 +1,12 @@
 package com.jiangwei.sg.config.aspect;//package com.jiangwei.config.aspect;
 //
-import com.jiangwei.sg.util.redis.RedisUtil;
-import org.apache.log4j.Logger;
+
+import com.jiangwei.sg.util.RedisUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
@@ -27,7 +26,7 @@ import java.lang.reflect.Method;
 @Component
 public class RedisCacheAspect {
 
-    private static final Logger logger = Logger.getLogger(RedisCacheAspect.class);
+//    private static final Logger logger = Logger.getLogger(RedisCacheAspect.class);
     /**
      * 分隔符 生成key 格式为 类全类名|方法名|参数所属类全类名
      **/
@@ -38,11 +37,11 @@ public class RedisCacheAspect {
     RedisUtil redisUtil;
 
     /**
-     * Service层切点 使用到了我们定义的 AddCache 作为切点表达式。
+     * Service层切点 使用到了我们定义的 Cacheable 作为切点表达式。
      * 而且我们可以看出此表达式基于 annotation。
      * 并且用于内建属性为查询的方法之上
      */
-    @Pointcut("@annotation(com.jiangwei.sg.config.aspect.AddCache)")
+    @Pointcut("@annotation(com.jiangwei.sg.config.aspect.Cacheable)")
     public void queryCache() {
     }
 
@@ -51,7 +50,7 @@ public class RedisCacheAspect {
      * 而且我们可以看出此表达式是基于 annotation 的。
      * 并且用于内建属性为非查询的方法之上，用于更新表
      */
-    @Pointcut("@annotation(com.jiangwei.sg.config.aspect.ClearRedis)")
+    @Pointcut("@annotation(com.jiangwei.sg.config.aspect.CacheEvict)")
     public void ClearCache() {
     }
 
@@ -59,58 +58,43 @@ public class RedisCacheAspect {
     @Around("queryCache()")
     public Object Interceptor(ProceedingJoinPoint pjp) throws Throwable {
         Object result = null;
-
+        System.out.println("query cache -------------------------------");
         Method method = getMethod(pjp);
-        AddCache cacheable = method.getAnnotation(AddCache.class);
+        Cacheable cacheable = method.getAnnotation(Cacheable.class);
         //key的value
         String fieldKey = parseKey(cacheable.fieldKey(), method, pjp.getArgs());
-
-        //获取方法的返回类型,让缓存可以返回正确的类型
-        Class returnType = ((MethodSignature) pjp.getSignature()).getReturnType();
-        System.out.println(cacheable.key()+"----"+fieldKey);
+        System.out.println(cacheable.key() + "----" + fieldKey);
         //使用redis 的hash进行存取，易于管理
         result = redisUtil.hget(cacheable.key(), fieldKey);
         if (result != null) {
-            System.out.println("从redis缓存获取");
-            return result;
+            System.out.println("have get result from redis --------");
         } else {
             try {
                 result = pjp.proceed();
-                System.out.println("从db获取");
+                System.out.println("get result from redis ----------");
                 Assert.notNull(fieldKey);
-                redisUtil.hset(cacheable.key(), fieldKey, result,cacheable.expireTime());
-                return result;
+                redisUtil.hset(cacheable.key(), fieldKey, result, cacheable.expireTime());
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            return null;
         }
-
+        return result;
     }
 
     /*** 定义清除缓存逻辑*/
     @Around(value = "ClearCache()")
-    public Object evict(ProceedingJoinPoint pjp) {
+    public Object evict(ProceedingJoinPoint pjp) throws Throwable {
         Object result = null;
-
+        System.out.println("clear cache ---------------");
         Method method = getMethod(pjp);
-        ClearRedis cacheable = method.getAnnotation(ClearRedis.class);
-        String fieldKey = parseKey(cacheable.fieldKey(), method, pjp.getArgs());
+        CacheEvict cacheEvict = method.getAnnotation(CacheEvict.class);
+        String fieldKey = parseKey(cacheEvict.fieldKey(), method, pjp.getArgs());
 
-        //获取方法的返回类型,让缓存可以返回正确的类型
-        Class returnType = ((MethodSignature) pjp.getSignature()).getReturnType();
-        //使用redis 的hash进行存取，易于管理
-        result = redisUtil.hget(cacheable.key(), fieldKey);
-        if (result != null) {
-            redisUtil.hdel(cacheable.key(), fieldKey);
-            //执行真正的删除，先更新数据库在更新缓存是最好的方案
-            try {
-                result = pjp.proceed();
-            } catch (Throwable e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+        redisUtil.hdel(cacheEvict.key(), fieldKey);
+        //执行真正的删除，先更新数据库在更新缓存是最好的方案
+
+        result = pjp.proceed();
+
         return result;
     }
 
@@ -163,14 +147,10 @@ public class RedisCacheAspect {
         //SPEL上下文
         StandardEvaluationContext context = new StandardEvaluationContext();
         //把方法参数放入SPEL上下文中
-        StringBuffer sb = new StringBuffer();
         for (int i = 0; i < paraNameArr.length; i++) {
             context.setVariable(paraNameArr[i], args[i]);
-            sb.append(paraNameArr[i]).append(":").append(args[i]).append(DELIMITER);
         }
-        String substring = sb.substring(0, sb.length() - 1);
-        System.out.println(substring);
-        return String.valueOf(substring.hashCode());
+        return parser.parseExpression(key).getValue(context, String.class);
     }
 
 

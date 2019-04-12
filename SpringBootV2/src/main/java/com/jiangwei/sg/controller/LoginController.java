@@ -1,10 +1,11 @@
 package com.jiangwei.sg.controller;
 
+import com.jiangwei.sg.config.shiro.JWTUtil;
 import com.jiangwei.sg.entity.*;
 import com.jiangwei.sg.service.impl.RoleServiceImpl;
 import com.jiangwei.sg.service.impl.UserServiceImpl;
 import com.jiangwei.sg.service.impl.UserToRoleServiceImpl;
-import com.jiangwei.sg.util.jwt.JWTUtil;
+import com.jiangwei.sg.util.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +42,7 @@ public class LoginController {
         SysRole role = roleService.selectByPrimaryKey(Integer.valueOf(userToRole.getRid()));
         //将token写入response的头部
         String token = JWTUtil.sign(sysUser.getUsername(), sysUser.getPassword());
-        httpResponse.setHeader(JWTUtil.AUTHORIZATION_HEADER,token);
+        httpResponse.setHeader(Const.AUTHORIZATION_HEADER,token);
         sysUser.setToken(token);
         result.put("user",sysUser);
         result.put("role",role);
